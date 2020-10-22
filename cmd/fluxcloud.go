@@ -60,8 +60,9 @@ func main() {
 	log.SetFlags(0)
 
 	config := &config.DefaultConfig{}
+	clusterInfo := formatters.GenerateClusterInfo(config)
 
-	formatter, err := formatters.NewDefaultFormatter(config)
+	formatter, err := formatters.NewDefaultFormatter(config, clusterInfo)
 	if err != nil {
 		log.Fatal(err)
 	}

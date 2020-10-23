@@ -16,5 +16,5 @@ steps:
 - task: Go@0
   inputs:
     command: 'test'
-    arguments: '-v ./...'
-    workingDirectory: '$(modulePath)'
+    arguments: '-v ./pkg/...'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'

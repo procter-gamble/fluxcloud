@@ -5,6 +5,7 @@
 
 trigger:
 - master
+- feat*
 
 pool:
   vmImage: 'ubuntu-latest'

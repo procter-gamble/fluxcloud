@@ -20,13 +20,13 @@ type ClusterInfo struct {
 	CloudIdentifier string //Either Resource group and Subscription Id for AKS, GCP ProjectId for GCP clusters
 }
 
-func GenerateClusterInfo(config config.Config) *ClusterInfo {
+func GenerateClusterInfo(config config.Config) ClusterInfo {
 	kubeConfig, err := rest.InClusterConfig()
 	fmt.Printf("Connecting to the cluster with incluster config")
 	if err != nil {
 		fmt.Printf("Error connecting the cluster...")
 		fmt.Printf(err.Error())
-		return &ClusterInfo{} //This is optional data so default should work
+		return ClusterInfo{} //This is optional data so default should work
 	}
 	// creates the clientset
 	clientset, err := kubernetes.NewForConfig(kubeConfig)
@@ -35,7 +35,7 @@ func GenerateClusterInfo(config config.Config) *ClusterInfo {
 	if err != nil {
 		fmt.Printf("Error retrieving node details")
 		fmt.Print(err.Error())
-		return &ClusterInfo{}
+		return ClusterInfo{}
 	}
 	firstNode := nodes.Items[0]
 	specId := firstNode.Spec.ProviderID
@@ -46,10 +46,10 @@ func GenerateClusterInfo(config config.Config) *ClusterInfo {
 		return ExtractClusterInfoForGCP(firstNode)
 	}
 
-	return &ClusterInfo{}
+	return ClusterInfo{}
 }
 
-func ExtractClusterInfoForGCP(node v1.Node) *ClusterInfo {
+func ExtractClusterInfoForGCP(node v1.Node) ClusterInfo {
 	specId := node.Spec.ProviderID
 	formattedString := specId[len(GCPProviderID):]
 	splitBySlash := strings.Split(formattedString, "/")
@@ -57,17 +57,17 @@ func ExtractClusterInfoForGCP(node v1.Node) *ClusterInfo {
 	// gce://dbce-c360-isl-dev-f03b/us-east4-b/gke-gke-cluster-gateway-pool-7b945b80-kqw5
 	// Can be inferred that its segregated as gce://projectID/location/node-name
 	if len(splitBySlash) >= 2 {
-		return &ClusterInfo{
+		return ClusterInfo{
 			ClusterName:     node.GetLabels()["cluster_name"],
 			CloudIdentifier: splitBySlash[0],
 			CloudProvider:   "GCP",
 		}
 	}
 
-	return &ClusterInfo{}
+	return ClusterInfo{}
 }
 
-func ExtractClusterInfoForAKS(node v1.Node) *ClusterInfo {
+func ExtractClusterInfoForAKS(node v1.Node) ClusterInfo {
 	specId := node.Spec.ProviderID
 	formattedString := specId[len(AzureProviderID):]
 	splitBySlash := strings.Split(formattedString, "/")
@@ -77,7 +77,7 @@ func ExtractClusterInfoForAKS(node v1.Node) *ClusterInfo {
 	// while the resource group here is structured as mc_{rg-name}_{cluster}_{location}
 	resourceGroup := splitBySlash[3]
 	splitResourceGroupByUnderscore := strings.Split(resourceGroup, "_")
-	return &ClusterInfo{
+	return ClusterInfo{
 		CloudProvider:   "Azure",
 		CloudIdentifier: "ResourceGroup: " + splitResourceGroupByUnderscore[1] + " Subscription: " + splitBySlash[1],
 		ClusterName:     splitResourceGroupByUnderscore[2],

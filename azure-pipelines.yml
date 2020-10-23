@@ -10,11 +10,6 @@ steps:
     version: '1.15.2'
 - task: Go@0
   inputs:
-    command: 'get'
-    arguments: '-d'
-    workingDirectory: '$(System.DefaultWorkingDirectory)'
-- task: Go@0
-  inputs:
     command: 'build'
     workingDirectory: '$(System.DefaultWorkingDirectory)'
     arguments: "-o fluxcloud ./cmd/"

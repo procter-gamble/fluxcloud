@@ -36,6 +36,6 @@ steps:
     containerRegistry: pgshared02
     repository: $(imageName)
     command: 'buildAndPush'
-    Dockerfile: './src/Dockerfile'
+    Dockerfile: './Dockerfile'
     tags: |
       $(buildNumber)

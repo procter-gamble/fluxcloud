@@ -7,7 +7,7 @@ pr: none
 
 pool:
   vmImage: 'ubuntu-latest'
-  imageName: 'procter-gamble/fluxcloud'
+  imageName: "procter-gamble/fluxcloud"
   major: '1'
   minor: '00'
   patch: $[counter(format('{0}.{1}', variables['major'], variables['minor']), 0)]

@@ -47,6 +47,6 @@ steps:
     containerRegistry: shared-gcr
     repository: 'shared-gcr-c99a/$(repositoryName)'
     command: 'buildAndPush'
-    Dockerfile: './src/Dockerfile'
+    Dockerfile: './Dockerfile'
     tags: |
       $(buildTag)

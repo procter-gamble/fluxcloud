@@ -1,0 +1,29 @@
+name: 'Fluxcloud CI'
+
+trigger: 
+  branches:
+    include:
+      - "*"
+    exclude:
+      - "master"
+
+pool:
+   vmImage: 'ubuntu-latest'
+
+steps: 
+- task: GoTool@0
+  displayName: 'Download Go'
+  inputs:
+    version: '1.15.2'
+- task: Go@0
+  displayName: 'Build'
+  inputs:
+    command: 'build'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+    arguments: "-o fluxcloud ./cmd/"
+- task: Go@0
+  displayName: 'Test'
+  inputs:
+    command: 'test'
+    arguments: '-v ./pkg/...'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'

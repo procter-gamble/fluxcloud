@@ -5,7 +5,7 @@ import (
 
 	"github.com/justinbarrick/fluxcloud/pkg/config"
 	"github.com/justinbarrick/fluxcloud/pkg/exporters"
-	"github.com/justinbarrick/fluxcloud/pkg/utils/test"
+	test_utils "github.com/justinbarrick/fluxcloud/pkg/utils/test"
 	"github.com/stretchr/testify/assert"
 	fluxevent "github.com/weaveworks/flux/event"
 )
@@ -14,13 +14,20 @@ func TestNewDefaultFormatter(t *testing.T) {
 	config := config.NewFakeConfig()
 	config.Set("github_url", "https://github.com/")
 
-	formatter, err := NewDefaultFormatter(config)
+	clusterInfo := ClusterInfo{
+		CloudIdentifier: "GCP",
+		CloudProvider:   "GCP",
+		ClusterName:     "ClusterName",
+	}
+
+	formatter, err := NewDefaultFormatter(config, clusterInfo)
 	assert.Nil(t, err)
 	assert.Equal(t, bodyTemplate, formatter.bodyTemplate)
 	assert.Equal(t, titleTemplate, formatter.titleTemplate)
 	assert.Equal(t, commitTemplate, formatter.commitTemplate)
 	assert.Equal(t, "https://github.com/", formatter.vcsLink)
 	assert.Equal(t, config, formatter.config)
+	assert.Equal(t, clusterInfo, formatter.clusterInfo)
 }
 
 func TestNewDefaultFormatterCustom(t *testing.T) {
@@ -37,12 +44,16 @@ func TestNewDefaultFormatterCustom(t *testing.T) {
 {{ if eq .EventType "commit" }}Applying changes from commit{{ end }}
 {{ if eq .EventType "autorelease" }}Auto releasing resource{{ end }}`
 	commitTemplate := `{{ .VCSLink }}/commits/{{ .Commit }}`
-
+	clusterInfo := ClusterInfo{
+		CloudIdentifier: "GCP",
+		CloudProvider:   "GCP",
+		ClusterName:     "ClusterName",
+	}
 	config.Set("body_template", bodyTemplate)
 	config.Set("title_template", titleTemplate)
 	config.Set("commit_template", commitTemplate)
 
-	formatter, err := NewDefaultFormatter(config)
+	formatter, err := NewDefaultFormatter(config, clusterInfo)
 	assert.Nil(t, err)
 	assert.Equal(t, bodyTemplate, formatter.bodyTemplate)
 	assert.Equal(t, titleTemplate, formatter.titleTemplate)
@@ -53,8 +64,12 @@ func TestNewDefaultFormatterCustom(t *testing.T) {
 
 func TestNewDefaultFormatterNoGithubLink(t *testing.T) {
 	config := config.NewFakeConfig()
-
-	_, err := NewDefaultFormatter(config)
+	clusterInfo := ClusterInfo{
+		CloudIdentifier: "GCP",
+		CloudProvider:   "GCP",
+		ClusterName:     "ClusterName",
+	}
+	_, err := NewDefaultFormatter(config, clusterInfo)
 	assert.NotNil(t, err)
 }
 
@@ -63,18 +78,25 @@ func TestDefaultFormatterImplementsFormatter(t *testing.T) {
 }
 
 func TestDefaultFormatterFormatSyncEvent(t *testing.T) {
+	clusterInfo := ClusterInfo{
+		CloudIdentifier: "GCP",
+		CloudProvider:   "GCP",
+		ClusterName:     "ClusterName",
+	}
+
 	d := DefaultFormatter{
 		vcsLink:        "https://github.com",
 		bodyTemplate:   bodyTemplate,
 		titleTemplate:  titleTemplate,
 		commitTemplate: commitTemplate,
+		clusterInfo:    clusterInfo,
 	}
 
 	event := test_utils.NewFluxSyncEvent()
 
 	msg := d.FormatEvent(event, &exporters.FakeExporter{})
 	assert.Equal(t, "https://github.com/commit/810c2e6f22ac5ab7c831fe0dd697fe32997b098f", msg.TitleLink)
-	assert.Equal(t, "Applied flux changes to cluster", msg.Title)
+	assert.Equal(t, "Applied flux changes to cluster ClusterName on GCP GCP", msg.Title)
 	assert.Equal(t, fluxevent.EventSync, msg.Type)
 	assert.Equal(t, `Event: Sync: 810c2e6, default:deployment/test
 Commits:
@@ -88,15 +110,21 @@ Resources updated:
 }
 
 func TestDefaultFormatterFormatCommitEvent(t *testing.T) {
+	clusterInfo := ClusterInfo{
+		CloudIdentifier: "GCP",
+		CloudProvider:   "GCP",
+		ClusterName:     "ClusterName",
+	}
 	d := DefaultFormatter{
 		vcsLink:        "https://github.com",
 		bodyTemplate:   bodyTemplate,
 		titleTemplate:  titleTemplate,
 		commitTemplate: commitTemplate,
+		clusterInfo:    clusterInfo,
 	}
 	msg := d.FormatEvent(test_utils.NewFluxCommitEvent(), &exporters.FakeExporter{})
 	assert.Equal(t, "https://github.com/commit/d644e1a05db6881abf0cdb78299917b95f442036", msg.TitleLink)
-	assert.Equal(t, "Applied flux changes to cluster", msg.Title)
+	assert.Equal(t, "Applied flux changes to cluster ClusterName on GCP GCP", msg.Title)
 	assert.Equal(t, fluxevent.EventCommit, msg.Type)
 	assert.Equal(t, `Event: Commit: d644e1a, default:deployment/test
 
@@ -142,15 +170,21 @@ func TestDefaultFormatterCustomTemplates(t *testing.T) {
 }
 
 func TestDefaultFormatterFormatAutoReleaseEvent(t *testing.T) {
+	clusterInfo := ClusterInfo{
+		CloudIdentifier: "GCP",
+		CloudProvider:   "GCP",
+		ClusterName:     "ClusterName",
+	}
 	d := DefaultFormatter{
 		vcsLink:        "https://github.com",
 		bodyTemplate:   bodyTemplate,
 		titleTemplate:  titleTemplate,
 		commitTemplate: commitTemplate,
+		clusterInfo:    clusterInfo,
 	}
 	msg := d.FormatEvent(test_utils.NewFluxAutoReleaseEvent(), &exporters.FakeExporter{})
 	assert.Equal(t, "https://github.com", msg.TitleLink)
-	assert.Equal(t, "Applied flux changes to cluster", msg.Title)
+	assert.Equal(t, "Applied flux changes to cluster ClusterName on GCP GCP", msg.Title)
 	assert.Equal(t, fluxevent.EventAutoRelease, msg.Type)
 	assert.Equal(t, `Event: Automated release of justinbarrick/nginx:test3
 
@@ -160,15 +194,21 @@ Resources updated:
 }
 
 func TestDefaultFormatterFormatUpdatePolicyEvent(t *testing.T) {
+	clusterInfo := ClusterInfo{
+		CloudIdentifier: "GCP",
+		CloudProvider:   "GCP",
+		ClusterName:     "ClusterName",
+	}
 	d := DefaultFormatter{
 		vcsLink:        "https://github.com",
 		bodyTemplate:   bodyTemplate,
 		titleTemplate:  titleTemplate,
 		commitTemplate: commitTemplate,
+		clusterInfo:    clusterInfo,
 	}
 	msg := d.FormatEvent(test_utils.NewFluxUpdatePolicyEvent(), &exporters.FakeExporter{})
 	assert.Equal(t, "https://github.com/commit/d644e1a05db6881abf0cdb78299917b95f442036", msg.TitleLink)
-	assert.Equal(t, "Applied flux changes to cluster", msg.Title)
+	assert.Equal(t, "Applied flux changes to cluster ClusterName on GCP GCP", msg.Title)
 	assert.Equal(t, fluxevent.EventSync, msg.Type)
 	assert.Equal(t, `Event: Sync: d644e1a, default:deployment/test
 Commits:
@@ -181,18 +221,24 @@ Resources updated:
 }
 
 func TestDefaultFormatterFormatSyncErrorEvent(t *testing.T) {
+	clusterInfo := ClusterInfo{
+		CloudIdentifier: "GCP",
+		CloudProvider:   "GCP",
+		ClusterName:     "ClusterName",
+	}
 	d := DefaultFormatter{
 		vcsLink:        "https://github.com",
 		bodyTemplate:   bodyTemplate,
 		titleTemplate:  titleTemplate,
 		commitTemplate: commitTemplate,
+		clusterInfo:    clusterInfo,
 	}
 
 	event := test_utils.NewFluxSyncErrorEvent()
 
 	msg := d.FormatEvent(event, &exporters.FakeExporter{})
 	assert.Equal(t, "https://github.com/commit/4997efcd4ac6255604d0d44eeb7085c5b0eb9d48", msg.TitleLink)
-	assert.Equal(t, "Applied flux changes to cluster", msg.Title)
+	assert.Equal(t, "Applied flux changes to cluster ClusterName on GCP GCP", msg.Title)
 	assert.Equal(t, fluxevent.EventSync, msg.Type)
 	assert.Equal(t, `Event: Sync: 4997efc, default:persistentvolumeclaim/test
 Commits:

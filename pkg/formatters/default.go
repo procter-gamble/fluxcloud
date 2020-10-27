@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	titleTemplate = `Applied flux changes to cluster`
+	titleTemplate = `Applied flux changes to cluster {{ .ClusterName }} on {{ .CloudProvider }} {{ .CloudIdentifier }}`
 	bodyTemplate  = `
 Event: {{ .EventString }}
 {{ if and (ne .EventType "commit") (gt (len .Commits) 0) }}Commits:
@@ -44,6 +44,7 @@ type DefaultFormatter struct {
 	bodyTemplate   string
 	titleTemplate  string
 	commitTemplate string
+	clusterInfo    ClusterInfo
 }
 
 type tplValues struct {
@@ -61,6 +62,9 @@ type tplValues struct {
 	Commits            []fluxevent.Commit
 	Errors             []fluxevent.ResourceError
 	FormatLink         func(string, string) string
+	ClusterName        string
+	CloudProvider      string
+	CloudIdentifier    string
 }
 
 type commitTemplateValues struct {
@@ -93,7 +97,7 @@ var (
 )
 
 // Create a DefaultFormatter
-func NewDefaultFormatter(config config.Config) (*DefaultFormatter, error) {
+func NewDefaultFormatter(config config.Config, clusterInfo ClusterInfo) (*DefaultFormatter, error) {
 	vcsLink, err := config.Required("github_url")
 	if err != nil {
 		return nil, err
@@ -124,6 +128,7 @@ func NewDefaultFormatter(config config.Config) (*DefaultFormatter, error) {
 		bodyTemplate:   bodyTemplate,
 		titleTemplate:  titleTemplate,
 		commitTemplate: commitTemplate,
+		clusterInfo:    clusterInfo,
 	}, nil
 }
 
@@ -150,6 +155,9 @@ func (d DefaultFormatter) FormatEvent(event fluxevent.Event, exporter exporters.
 		FormatLink: func(link, text string) string {
 			return exporter.FormatLink(link, text)
 		},
+		CloudIdentifier: d.clusterInfo.CloudIdentifier,
+		CloudProvider:   d.clusterInfo.CloudProvider,
+		ClusterName:     d.clusterInfo.ClusterName,
 	}
 
 	nl := exporter.NewLine()

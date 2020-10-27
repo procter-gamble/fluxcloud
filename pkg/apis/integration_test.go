@@ -3,23 +3,30 @@ package apis
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/justinbarrick/fluxcloud/pkg/msg"
-	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/justinbarrick/fluxcloud/pkg/msg"
+	"github.com/stretchr/testify/require"
+
 	"github.com/justinbarrick/fluxcloud/pkg/config"
 	"github.com/justinbarrick/fluxcloud/pkg/exporters"
 	"github.com/justinbarrick/fluxcloud/pkg/formatters"
-	"github.com/justinbarrick/fluxcloud/pkg/utils/test"
+	test_utils "github.com/justinbarrick/fluxcloud/pkg/utils/test"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestSlackIntegrationTest(t *testing.T) {
 	var exporter *exporters.Slack
 	var formatter *formatters.DefaultFormatter
+
+	clusterInfo := formatters.ClusterInfo{
+		CloudIdentifier: "GCP",
+		CloudProvider:   "GCP",
+		ClusterName:     "ClusterName",
+	}
 
 	event := test_utils.NewFluxSyncEvent()
 	data, err := json.Marshal(event)
@@ -45,7 +52,7 @@ func TestSlackIntegrationTest(t *testing.T) {
 	exporter, err = exporters.NewSlack(config)
 	assert.Nil(t, err)
 
-	formatter, err = formatters.NewDefaultFormatter(config)
+	formatter, err = formatters.NewDefaultFormatter(config, clusterInfo)
 	assert.Nil(t, err)
 
 	apiConfig := NewAPIConfig(formatter, []exporters.Exporter{exporter}, config)
@@ -101,13 +108,17 @@ func TestWebhookAndSlackIntegrationTest(t *testing.T) {
 	config.Set("github_url", "https://github.com")
 	config.Set("webhook_url", webhookReceiver.URL)
 	config.Set("exporter_type", "slack,webhook")
-
+	clusterInfo := formatters.ClusterInfo{
+		CloudIdentifier: "GCP",
+		CloudProvider:   "GCP",
+		ClusterName:     "ClusterName",
+	}
 	slackExporter, err = exporters.NewSlack(config)
 	require.NoError(err)
 	webhookExporter, err = exporters.NewWebhook(config)
 	require.NoError(err)
 
-	formatter, err = formatters.NewDefaultFormatter(config)
+	formatter, err = formatters.NewDefaultFormatter(config, clusterInfo)
 	require.NoError(err)
 
 	apiConfig := NewAPIConfig(formatter, []exporters.Exporter{slackExporter, webhookExporter}, config)

@@ -1,0 +1,41 @@
+name: 'Fluxcloud Container Build'
+
+trigger: 
+- "master"
+
+pr: none
+
+pool:
+  vmImage: 'ubuntu-latest'
+  imageName: 'procter-gamble/fluxcloud'
+  major: '1'
+  minor: '00'
+  patch: $[counter(format('{0}.{1}', variables['major'], variables['minor']), 0)]
+  buildNumber: 'v$(major).$(minor).$(patch)'
+
+steps: 
+- task: GoTool@0
+  displayName: 'Download Go'
+  inputs:
+    version: '1.15.2'
+- task: Go@0
+  displayName: 'Build'
+  inputs:
+    command: 'build'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+    arguments: "-o fluxcloud ./cmd/"
+- task: Go@0
+  displayName: 'Test'
+  inputs:
+    command: 'test'
+    arguments: '-v ./pkg/...'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+- task: Docker@2
+  displayName: 'Build and Push Container'
+  inputs:
+    containerRegistry: pgshared02
+    repository: $(imageName)
+    command: 'buildAndPush'
+    Dockerfile: './Dockerfile'
+    tags: |
+      $(buildNumber)

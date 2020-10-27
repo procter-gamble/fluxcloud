@@ -3,22 +3,27 @@ package apis
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/justinbarrick/fluxcloud/pkg/config"
-	"github.com/justinbarrick/fluxcloud/pkg/exporters"
-	"github.com/justinbarrick/fluxcloud/pkg/formatters"
-	"github.com/justinbarrick/fluxcloud/pkg/utils/test"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/justinbarrick/fluxcloud/pkg/config"
+	"github.com/justinbarrick/fluxcloud/pkg/exporters"
+	"github.com/justinbarrick/fluxcloud/pkg/formatters"
+	test_utils "github.com/justinbarrick/fluxcloud/pkg/utils/test"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestHandleV6(t *testing.T) {
 	fakeExporter := &exporters.FakeExporter{}
 	config := config.NewFakeConfig()
 	config.Set("github_url", "https://github.com")
-
-	formatter, _ := formatters.NewDefaultFormatter(config)
+	clusterInfo := formatters.ClusterInfo{
+		CloudIdentifier: "GCP",
+		CloudProvider:   "GCP",
+		ClusterName:     "ClusterName",
+	}
+	formatter, _ := formatters.NewDefaultFormatter(config, clusterInfo)
 
 	apiConfig := APIConfig{
 		Server:    http.NewServeMux(),

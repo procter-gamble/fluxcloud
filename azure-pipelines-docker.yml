@@ -41,3 +41,12 @@ steps:
     Dockerfile: './Dockerfile'
     tags: |
       $(buildTag)
+- task: Docker@2
+  displayName: 'Push Container To Shared GCR'
+  inputs:
+    containerRegistry: shared-gcr
+    repository: 'shared-gcr-c99a/$(repositoryName)'
+    command: 'buildAndPush'
+    Dockerfile: './src/Dockerfile'
+    tags: |
+      $(buildTag)

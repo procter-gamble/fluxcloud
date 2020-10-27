@@ -7,11 +7,11 @@ pr: none
 
 pool:
   vmImage: 'ubuntu-latest'
-  imageName: "procter-gamble/fluxcloud"
+  repositoryName: "procter-gamble/fluxcloud"
   major: '1'
   minor: '00'
-  patch: $[counter(format('{0}.{1}', variables['major'], variables['minor']), 0)]
-  buildNumber: 'v$(major).$(minor).$(patch)'
+  patchNumber: $[counter(format('{0}.{1}', variables['major'], variables['minor']), 0)]
+  buildTag: 'v$(major).$(minor).$(patchNumber)'
 
 steps: 
 - task: GoTool@0
@@ -34,8 +34,8 @@ steps:
   displayName: 'Build and Push Container'
   inputs:
     containerRegistry: pgshared02
-    repository: $(imageName)
+    repository: $(repositoryName)
     command: 'buildAndPush'
     Dockerfile: './Dockerfile'
     tags: |
-      $(buildNumber)
+      $(buildTag)

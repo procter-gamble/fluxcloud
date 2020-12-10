@@ -1,5 +1,6 @@
 package formatters
 
+// the changes done here are to extract cluster name and meta information without the help of a configmap or external labels
 import (
 	"fmt"
 	"strings"

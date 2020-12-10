@@ -18,10 +18,6 @@ import (
 const (
 	titleTemplate = `Applied flux changes to cluster {{ .ClusterName }} on {{ .CloudProvider }} {{ .CloudIdentifier }}`
 	bodyTemplate  = `
-ClusterInfo: 
-ClusterName: {{ .ClusterName }}
-Provider: {{ .CloudProvider }} 
-Identifier: {{ .CloudIdentifier }}
 Event: {{ .EventString }}
 {{ if and (ne .EventType "commit") (gt (len .Commits) 0) }}Commits:
 {{ range .Commits }}
